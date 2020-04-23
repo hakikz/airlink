@@ -15,19 +15,21 @@ class CreateBillsTable extends Migration
     {
         Schema::create('bills', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('bill_id');
+            $table->unsignedBigInteger('bill_id')->unique();
+            $table->integer('branch');
             $table->unsignedBigInteger('vat_no');
             $table->float('total');
-            $table->boolean('vat_enable');
+            $table->boolean('vat_enable')->nullable();
+            $table->integer('vat');
             $table->float('weight');
-            $table->float('service_charge');
-            $table->float('door_delivery');
-            $table->float('packaging_charge');
-            $table->text('awb_id');
+            $table->float('service_charge')->nullable();
+            $table->float('door_delivery')->nullable();
+            $table->float('packaging_charge')->nullable();
+            $table->text('awb_num');
             $table->text('delivery_place');
             $table->integer('cartoon_quantity');
             $table->float('price_per_kg');
-            $table->float('vat_price');
+            $table->float('vat_price')->nullable();
             $table->timestamps();
         });
     }

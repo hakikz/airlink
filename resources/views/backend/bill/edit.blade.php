@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="{{asset('backend/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css')}}">
 <!-- Sweetalert 2 -->
   <link rel="stylesheet" href="{{ asset('backend/plugins/sweetalert2/sweetalert2.min.css') }}">
-
 @endpush
 
 @section('content')
@@ -40,8 +39,9 @@
           <div class="container-fluid">
             <div class="card card-default">
               <!-- form -->
-              <form action="{{ route('backend.bill.store') }}" id="sales_info" method="POST">
+              <form action="{{ route('backend.bill.update', $bill->bill_id) }}" id="sales_info" method="POST">
                 @csrf
+                @method('PUT')
                 <div class="card-header">
                   <h3 class="card-title">Receipt Voucher</h3>
   
@@ -61,7 +61,7 @@
                           <option value="">--Select Branch--</option>
                           @foreach ($branches as $branch)
                               <option value="{{ $branch->id }}"
-                                @if (Auth::user()->id == $branch->id)
+                                @if ($bill->branch == $branch->id)
                                     selected
                                 @endif
                               >{{ $branch->name }}</option>
@@ -70,14 +70,18 @@
                       </div>
                     </div>
                     <!-- Serial & Voucher -->
+                    @php
+                        $bill_id_length = strlen((string)$bill->bill_id);
+                        $zero_fill = (int)$bill_id_length + 1;
+                    @endphp 
                     <div class="col-md-3">
                       <div class="input-group mb-3">
                         <div class="input-group-append">
                           <span class="input-group-text" id="basic-addon2">SL #</span>
                         </div>
                         <input type="text" class="form-control" placeholder="Serial Number" aria-label="Serial Number"
-                          aria-describedby="basic-addon2" value="{{ str_pad($bill_id, $zero_fill, "0", STR_PAD_LEFT) }}" disabled>
-                        <input type="hidden" name="bill_id" value="{{ $bill_id }}">
+                          aria-describedby="basic-addon2" value="{{ str_pad($bill->bill_id, $zero_fill, "0", STR_PAD_LEFT) }}" disabled>
+                        <input type="hidden" name="bill_id" value="{{ $bill->bill_id }}">
                       </div>
                     </div>
                     <!-- Vat No. -->
@@ -98,26 +102,26 @@
                           <span class="input-group-text" id="basic-addon2">Date</span>
                         </div>
                         <input type="text" class="form-control" placeholder="Date" aria-label="Date"
-                          aria-describedby="basic-addon2" value="{{ date('d-m-Y') }}" disabled>
+                          aria-describedby="basic-addon2" value="{{ $bill->updated_at->format('d-m-Y') }}" disabled>
                       </div>
                     </div>
                     <!-- From Fields -->
                     <div class="col-md-4">
                       <div class="form-group">
                         <label for="From">From</label>
-                        <input name="from_name" type="text" class="form-control @error('from_name') is-invalid @enderror" placeholder="Name" value="{{ old('from_name') }}">
+                        <input name="from_name" type="text" class="form-control @error('from_name') is-invalid @enderror" placeholder="Name" value="{{ $bill_customer->from_name }}">
                         @error('from_name')
                           <div class="invalid-feedback">{{ $errors->first('from_name') }}</div>
                         @enderror
                       </div>
                       <div class="form-group">
-                        <textarea name="from_address" class="form-control @error('from_address') is-invalid @enderror" placeholder="Address">{{ old('from_address') }}</textarea>
+                        <textarea name="from_address" class="form-control @error('from_address') is-invalid @enderror" placeholder="Address">{{ $bill_customer->from_address }}</textarea>
                         @error('from_address')
                           <div class="invalid-feedback">{{ $errors->first('from_address') }}</div>
                         @enderror
                       </div>
                       <div class="form-group">
-                        <input name="from_phone" type="text" class="form-control @error('from_phone') is-invalid @enderror" placeholder="Phone Number" value="{{ old('from_phone') }}">
+                        <input name="from_phone" type="text" class="form-control @error('from_phone') is-invalid @enderror" placeholder="Phone Number" value="{{ $bill_customer->from_phone }}">
                         @error('from_phone')
                           <div class="invalid-feedback">{{ $errors->first('from_phone') }}</div>
                         @enderror
@@ -127,19 +131,19 @@
                     <div class="col-md-4">
                       <div class="form-group">
                         <label for="to">To</label>
-                        <input name="to_name" type="text" class="form-control @error('to_name') is-invalid @enderror" placeholder="Name" value="{{ old('to_name') }}">
+                        <input name="to_name" type="text" class="form-control @error('to_name') is-invalid @enderror" placeholder="Name" value="{{ $bill_customer->to_name }}">
                         @error('to_name')
                           <div class="invalid-feedback">{{ $errors->first('to_name') }}</div>
                         @enderror
                       </div>
                       <div class="form-group">
-                        <textarea name="to_address" class="form-control @error('to_address') is-invalid @enderror" placeholder="Address">{{ old('to_address') }}</textarea>
+                        <textarea name="to_address" class="form-control @error('to_address') is-invalid @enderror" placeholder="Address">{{ $bill_customer->to_address }}</textarea>
                         @error('to_address')
                           <div class="invalid-feedback">{{ $errors->first('to_address') }}</div>
                         @enderror
                       </div>
                       <div class="form-group">
-                        <input name="to_phone" type="text" class="form-control @error('to_phone') is-invalid @enderror" placeholder="Phone Number" value="{{ old('to_phone') }}">
+                        <input name="to_phone" type="text" class="form-control @error('to_phone') is-invalid @enderror" placeholder="Phone Number" value="{{ $bill_customer->to_phone }}">
                         @error('to_phone')
                           <div class="invalid-feedback">{{ $errors->first('to_phone') }}</div>
                         @enderror
@@ -152,7 +156,7 @@
                         <select name="awb_num" id="awb" class="form-control @error('awb_num') is-invalid @enderror">
                           <option value="">Select AWB--</option>
                           @foreach ($awbs as $awb)
-                          <option value="{{ $awb->awb_num }}" @if(old('awb_num') == $awb->awb_num) selected @endif>{{ $awb->awb_num }}</option>
+                          <option value="{{ $awb->awb_num }}" @if(old('awb_num') == $awb->awb_num || $bill->awb_num == $awb->awb_num) selected @endif>{{ $awb->awb_num }}</option>
                           @endforeach
                         </select>
                         @error('awb_num')
@@ -161,7 +165,7 @@
                       </div>
                       <div class="form-group">
                         <label for="From">Delivery Place</label>
-                        <textarea name="delivery_place" id="delivery_place" class="form-control @error('delivery_place') is-invalid @enderror">{{ old('delivery_place') }}</textarea>
+                        <textarea name="delivery_place" id="delivery_place" class="form-control @error('delivery_place') is-invalid @enderror">{{ $bill_customer->place }}</textarea>
                         @error('delivery_place')
                           <div class="invalid-feedback">{{ $errors->first('delivery_place') }}</div>
                         @enderror
@@ -182,13 +186,14 @@
                         </div>
                       </div>
                       <div id="more_field">
+                        @foreach($bill_products as $key => $bill_product)
                         <div class="row multi-field" id="row">
                           <div class="col-md-6">
                             <div class="form-group">
                               <select class="form-control products @if($errors->get('product_id.*')) is-invalid @endif" name="product_id[]" id="product_id">
                                 <option value="">Select Product--</option>
                                 @foreach ($products as $product)
-                                  <option value="{{ $product->id }}">{{ $product->name }}</option>
+                                  <option value="{{ $product->id }}" @if($product->id == $bill_product->product_id) selected  @endif>{{ $product->name }}</option>
                                 @endforeach
                               </select>
                               
@@ -196,15 +201,17 @@
                           </div>
                           <div class="col-md-5">
                             <div class="form-group">
-                              <input name="quantity[]" type="number" class="form-control @if($errors->get('quantity.*')) is-invalid @endif">
+                              <input name="quantity[]" type="number" class="form-control @if($errors->get('quantity.*')) is-invalid @endif" value="{{ $bill_product->quantity }}">
                               
                             </div>
                           </div>
                           <div class="col-md-1">
-                            <button type="button" class="remove-field btn btn-sm btn-danger btn-del"><i
+                            <input type="hidden" name="p_id[]" value="{{ $bill_product->id }}">
+                            <button type="button" class="remove-field btn btn-sm btn-danger btn-del" value="{{ $bill_product->id }}"><i
                                 class="fas fa-minus"></i></button>
                           </div>
                         </div>
+                        @endforeach
                       </div>
                       <button id="add_more" type="button" class="add-field btn btn-sm btn-success"><i
                           class="fas fa-plus-square"></i> Add More</button>
@@ -218,7 +225,7 @@
                               <div class="form-group">
                                 <label for="qty_cartoon">Qty. of Cartoon</label>
                                 <input name="qty_cartoon" type="number" class="form-control @error('qty_cartoon') is-invalid @enderror" min="0"
-                                oninput="this.value = Math.abs(this.value)" value="{{ old('qty_cartoon') }}">
+                                oninput="this.value = Math.abs(this.value)" @isset($bill->cartoon_quantity) value="{{ $bill->cartoon_quantity }}" @endisset>
                                 
                               </div>
                             </div>
@@ -228,7 +235,7 @@
                                 <!-- <input name="weight" type="text" class="form-control"> -->
                                 <div class="input-group mb-3">
                                   <input type="text" name="weight" id="product_weight" class="form-control @error('weight') is-invalid @enderror"
-                                    aria-label="Weight" aria-describedby="basic-addon2">
+                                    aria-label="Weight" aria-describedby="basic-addon2" @isset($bill->weight) value="{{ $bill->weight }}" @endisset>
                                   <div class="input-group-append">
                                     <span class="input-group-text" id="basic-addon2">KG</span>
                                   </div>
@@ -247,21 +254,21 @@
                               <div class="form-group">
                                 <label for="service_charge">Service Charge</label>
                                 <input name="service_charge" id="service_charge" type="number" class="form-control"
-                                oninput="this.value = Math.abs(this.value)">
+                                  oninput="this.value = Math.abs(this.value)" @isset($bill->service_charge) value="{{ $bill->service_charge }}" @endisset>
                               </div>
                             </div>
                             <div class="col-md-4">
                               <div class="form-group">
                                 <label for="door_delivery">Door Delivery</label>
                                 <input name="door_delivery" id="door_delivery" type="number" class="form-control"
-                                  oninput="this.value = Math.abs(this.value)">
+                                  oninput="this.value = Math.abs(this.value)" @isset($bill->door_delivery) value="{{ $bill->door_delivery }}" @endisset>
                               </div>
                             </div>
                             <div class="col-md-4">
                               <div class="form-group">
                                 <label for="packaging_charge">Packaging Charge</label>
                                 <input name="packaging_charge" id="packaging_charge" type="number" class="form-control"
-                                  oninput="this.value = Math.abs(this.value)">
+                                  oninput="this.value = Math.abs(this.value)" @isset($bill->packaging_charge) value="{{ $bill->packaging_charge }}" @endisset>
                               </div>
                             </div>
                           </div>
@@ -275,7 +282,7 @@
                             <div class="col-md-6 offset-md-6">
                               <div class="form-group">
                                 <div class="icheck-primary d-inline">
-                                  <input type="checkbox" id="vat_check" name="vat_check" checked="checked" value="1">
+                                  <input type="checkbox" id="vat_check" name="vat_check" @if(isset($bill->vat_enable)) checked="checked" value="1" @endif>
                                   <label for="vat_check">VAT Enable</label>
                                 </div>
                               </div>
@@ -289,7 +296,11 @@
                               </div>
                             </div>
                             <div class="col-md-4">
+                              @if(isset($bill->vat_enable))
+                              <input type="text" class="form-control" id="vat_val" @if($bill->vat_enable == 1) value="{{ $bill->vat_price }}"  @endif disabled="disabled">
+                              @else
                               <input type="text" class="form-control" id="vat_val" value="0" disabled="disabled">
+                              @endif
                               <small><i style="color: red;">VAT Icluded {{ $setting->vat_value }}%</i></small>
                             </div>
                           </div>
@@ -301,8 +312,8 @@
                               </div>
                             </div>
                             <div class="col-md-4">
-                              <input type="text" class="form-control" id="result" value="0" disabled="disabled">
-                              <input name="total" id="result_hidden" type="hidden">
+                              <input type="text" class="form-control" id="result" value="{{ $bill->total }}" disabled="disabled">
+                              <input name="total" id="result_hidden" type="hidden" value="{{ $bill->total }}">
                             </div>
                           </div>
                           <!-- /.row -->
@@ -315,8 +326,8 @@
                   <div class="row">
                     <div class="col-md-4 offset-md-4">
                       <!-- VAT is here -->
-                      <input type="hidden" name="vat" id="vat" value="{{ $setting->vat_value }}">
-                      <button type="submit" class="btn btn-success" id="submit_all"><i class="fas fa-save"></i> Save
+                      <input type="hidden" name="vat" id="vat" @if($bill->vat != '') value="{{ $bill->vat }}" @else value="0"  @endif>
+                      <button type="submit" class="btn btn-success" id="submit_all"><i class="fas fa-save"></i> Update
                         bill</button>
                       <a href="{{ route('backend.bill.create') }}" class="btn btn-warning"><i class="fas fa-plus"></i> New Bill</a>
                     </div>
@@ -351,8 +362,6 @@
       $('.select2bs4').select2({
         theme: 'bootstrap4'
       });
-      //Money Euro
-      $('[data-mask]').inputmask();
     });
 
     $(document).ready(function () {
@@ -396,6 +405,11 @@
         }
       });
 
+      // if ($('#vat_check').is(':checked')) {
+      //     $('.vat_block').show('slow');
+      // }else{
+      //     $('.vat_block').hide('slow');
+      // }
       // Add additonal Product Descriptoin
       $("#add_more").click(function () {
         count++;
@@ -416,6 +430,7 @@
           '</div>' +
           '</div>' +
           '<div class="col-md-1">' +
+          '<input type="hidden" name="p_id[]" value="n' + count + '">' +
           '<button type="button" class="remove-field btn btn-sm btn-danger btn-del"><i class="fas fa-minus"></i></button>' +
           '</div>' +
           '</div>';
@@ -425,10 +440,38 @@
       });
 
       // Remove Addition Prdouct Description
-      $(document).on('click', '.remove-field', function () {
+      $(document).on('click', '.remove-field', function (e) {
 
+        var del_id = $(this).val();
+        // alert(del_id);
         if ($(".multi-field").length > 1){
-          $(this).closest(".multi-field").remove();
+          if(del_id != ""){
+            // alert(del_id);
+            e.preventDefault();
+            $.ajax({
+                type: 'DELETE',
+                url:'/admin/bill/product/'+del_id,
+                cache: false,
+                data:{"_token": "{{ csrf_token() }}", "id": del_id},
+                success: function(data){
+                  // alert(data);
+                    if(data=="YES"){
+                      // $(this).closest(".multi-field").remove();
+                      Swal.fire(
+                        'Remind!',
+                        'Product removed successfully!',
+                        'success'
+                      )
+                      $("#more_field").load("# #more_field");
+                    }else{
+                        alert("can't delete the row")
+                    }
+                }
+
+            });
+          }else{
+            $(this).closest(".multi-field").remove();
+          }
         }
         checkSelects();
 
@@ -448,9 +491,7 @@
         var multiply = parseFloat(weight) * parseFloat(per_kg);
         var with_vat = parseFloat(vat)/100;
         // alert(vat);
-
         checkFields();
-
         // Only Weight Filled
         if (weight != "" && service_charge == "" && door_delivery == "" && packaging_charge == "") {
           vat_result = parseFloat(multiply) * parseFloat(with_vat);

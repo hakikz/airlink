@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAirWayBillsTable extends Migration
+class CreateBillProductsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,13 @@ class CreateAirWayBillsTable extends Migration
      */
     public function up()
     {
-        Schema::create('air_way_bills', function (Blueprint $table) {
+        Schema::create('bill_products', function (Blueprint $table) {
             $table->id();
-            $table->string('awb_num')->unique();
-            $table->integer('storage_size');
+            $table->unsignedBigInteger('bill_id');
+            $table->text('product_id');
+            $table->text('quantity');
             $table->timestamps();
+            $table->foreign('bill_id')->references('bill_id')->on('bills')->onDelete('cascade');
         });
     }
 
@@ -28,6 +30,6 @@ class CreateAirWayBillsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('air_way_bills');
+        Schema::dropIfExists('bill_products');
     }
 }

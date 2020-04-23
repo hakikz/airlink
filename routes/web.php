@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,6 +23,8 @@ Route::group(['as'=>'backend.', 'prefix'=>'admin', 'namespace'=>'Backend', 'midd
     Route::get('/settings', 'SettingController@create')->name('settings.create');
     Route::post('/settings/store', 'SettingController@store')->name('settings.store');
     Route::put('/settings/{settings}', 'SettingController@update')->name('settings.update');
+    Route::delete('/bill/product/{id}', 'BillProductController@deleteProduct')->name('bill.product.delete');
+    Route::get('/bill/pdf/{id}','BillController@generatePDF')->name('bill.pdf');
     // Route::get('/add-branch', 'BranchController@create')->name('branch.create');
     // Route::get('/add-user', 'UserController@create')->name('user.create');
     // Route::get('/add-product', 'ProductController@create')->name('product.create');
